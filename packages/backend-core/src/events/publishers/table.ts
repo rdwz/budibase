@@ -2,7 +2,6 @@ import { publishEvent } from "../events"
 import {
   Event,
   TableExportFormat,
-  TableImportFormat,
   Table,
   TableCreatedEvent,
   TableUpdatedEvent,
@@ -40,10 +39,9 @@ export async function exported(table: Table, format: TableExportFormat) {
   await publishEvent(Event.TABLE_EXPORTED, properties)
 }
 
-export async function imported(table: Table, format: TableImportFormat) {
+export async function imported(table: Table){
   const properties: TableImportedEvent = {
-    tableId: table._id as string,
-    format,
+    tableId: table._id as string
   }
   await publishEvent(Event.TABLE_IMPORTED, properties)
 }

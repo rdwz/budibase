@@ -11,10 +11,11 @@
     Layout,
   } from "@budibase/bbui"
   import { datasources } from "stores/backend"
-  import TableDataImport from "../TableDataImport.svelte"
+  import TableDataImport from "../TableDataImportNew.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
+    FIELDS,
   } from "constants/backend"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
@@ -29,19 +30,38 @@
     : BUDIBASE_INTERNAL_DB_ID
 
   export let name
-  let dataImport
   let error = ""
   let autoColumns = getAutoColumnInformation()
+  let schema = {}
+  let rows = []
+  let allValid = false
+  let displayColumn = null
 
-  function addAutoColumns(tableName, schema) {
-    for (let [subtype, col] of Object.entries(autoColumns)) {
-      if (!col.enabled) {
-        continue
-      }
-      schema[col.name] = buildAutoColumn(tableName, col.name, subtype)
-    }
-    return schema
+  $: {
+    console.log(error, name, allValid)
   }
+
+  function getAutoColumns() {
+    const selectedAutoColumns = {}
+
+    Object.entries(autoColumns).forEach(([subtype, column]) => {
+      if (column.enabled) {
+        selectedAutoColumns[column.name] = buildAutoColumn(name, column.name, subtype)
+      }
+    });
+
+    return selectedAutoColumns
+  }
+
+  // Changes the schema format from the minimal version used in data import validation to the more fleshed out format used in table creation.
+  function getFormattedSchema() {
+    return Object.entries(schema).map(([name, type]) => ({
+      name,
+      type,
+      constraints: FIELDS[type.toUpperCase()].constraints,
+    }));
+  }
+
 
   function checkValid(evt) {
     const tableName = evt.target.value
@@ -55,15 +75,15 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: addAutoColumns(name, dataImport.schema || {}),
-      dataImport,
+      schema: { ...getFormattedSchema(), ...getAutoColumns() },
+      dataImport: rows,
       type: "internal",
       sourceId: targetDatasourceId,
     }
 
     // Only set primary display if defined
-    if (dataImport.primaryDisplay && dataImport.primaryDisplay.length) {
-      newTable.primaryDisplay = dataImport.primaryDisplay
+    if (displayColumn && displayColumn.length) {
+      newTable.primaryDisplay = displayColumn
     }
 
     // Create table
@@ -90,7 +110,7 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || (dataImport && !dataImport.valid)}
+  disabled={error || !name || !allValid}
 >
   <Input
     data-cy="table-name-input"
@@ -118,7 +138,7 @@
   <div>
     <Layout gap="XS" noPadding>
       <Label grey extraSmall>Create Table from CSV (Optional)</Label>
-      <TableDataImport bind:dataImport />
+      <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
     </Layout>
   </div>
 </ModalContent>

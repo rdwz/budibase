@@ -1,4 +1,5 @@
 import { transform } from "../../../utilities/csvParser"
+import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import { isEqual } from "lodash"
 import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
@@ -128,24 +129,25 @@ export function importToRows(data: any, table: any, user: any = {}) {
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, dataImport: any) {
-  if (!dataImport || !dataImport.csvString) {
+export async function handleDataImport(user: any, table: any, dataImport: unknown) {
+  const schema: unknown = table.schema
+
+  if (!dataImport || !isRows(dataImport) || !isSchema(schema)) {
+    console.log("failure")
     return table
   }
 
   const db = context.getAppDB()
-  // Populate the table with rows imported from CSV in a bulk update
-  const data = await transform({
-    ...dataImport,
-    existingTable: table,
-  })
+  const data = parse(dataImport, schema)
+  console.log(data)
 
   let finalData: any = importToRows(data, table, user)
 
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
-  await events.rows.imported(table, "csv", finalData.length)
+
+  await events.rows.imported(table, finalData.length)
   return table
 }
 

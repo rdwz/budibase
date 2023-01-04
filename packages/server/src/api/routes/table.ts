@@ -146,6 +146,21 @@ router
     authorized(BUILDER),
     tableController.validateCSVSchema
   )
+  .post(
+    "/api/convert/csvToJson",
+    authorized(BUILDER),
+    tableController.csvToJson
+  )
+  .post(
+    "/api/tables/validateNewTableImport",
+    authorized(BUILDER),
+    tableController.validateNewTableImport
+  )
+  .post(
+    "/api/tables/validateExistingTableImport",
+    authorized(BUILDER),
+    tableController.validateExistingTableImport
+  )
   /**
    * @api {post} /api/tables/:tableId/:revId Delete a table
    * @apiName Delete a table

@@ -339,7 +339,7 @@ export async function destroy(ctx: BBContext) {
 export async function bulkImport(ctx: BBContext) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
-  if (!dataImport || !dataImport.schema || !dataImport.csvString) {
+  if (!dataImport || !dataImport.schema || !dataImport.rows) {
     ctx.throw(400, "Provided data import information is invalid.")
   }
   const rows = await csvParser.transform({
@@ -349,6 +349,6 @@ export async function bulkImport(ctx: BBContext) {
   await handleRequest(Operation.BULK_CREATE, table._id!, {
     rows,
   })
-  await events.rows.imported(table, "csv", rows.length)
+  await events.rows.imported(table, rows.length)
   return table
 }

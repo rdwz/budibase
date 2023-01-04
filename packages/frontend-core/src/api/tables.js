@@ -89,7 +89,14 @@ export const buildTableEndpoints = API => ({
       },
     })
   },
-
+  csvToJson: async (csvString) => {
+    return await API.post({
+      url: "/api/convert/csvToJson",
+      body: {
+        csvString
+      },
+    })
+  },
   /**
    * Gets a list o tables.
    */
@@ -120,4 +127,22 @@ export const buildTableEndpoints = API => ({
       url: `/api/tables/${tableId}/${tableRev}`,
     })
   },
+  validateNewTableImport: async ({ rows, schema }) => {
+    return await API.post({
+      url: "/api/tables/validateNewTableImport",
+      body: {
+        rows,
+        schema
+      },
+    })
+  },
+  validateExistingTableImport: async ({ rows, tableId }) => {
+    return await API.post({
+      url: "/api/tables/validateExistingTableImport",
+      body: {
+        rows,
+        tableId,
+      },
+    })
+  }
 })

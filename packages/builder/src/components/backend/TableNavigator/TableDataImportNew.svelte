@@ -9,9 +9,11 @@
   let fileType = null
 
   let loading = false;
+  let validation = {}
+  let validateHash = ''
+
   export let rows = []
   export let schema = {}
-  let validation = {}
   export let allValid = false
   export let displayColumn = null
 
@@ -72,6 +74,7 @@
 
     try {
       if (rows.length > 0) {
+        console.log('running');
         validation = await API.validateNewTableImport({ rows, schema });
         allValid = Object.values(validation).every(columnValid => columnValid)
       }
@@ -82,8 +85,16 @@
     loading = false;
   }
 
-  $: validate(rows, schema)
-  $: console.log(validation)
+  $: {
+    // binding in consumer is causing double renders here
+    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+
+    if (newValidateHash !== validateHash) {
+      validate(rows, schema)
+    }
+
+    validateHash = newValidateHash
+  }
 </script>
 
 <div class="dropzone">

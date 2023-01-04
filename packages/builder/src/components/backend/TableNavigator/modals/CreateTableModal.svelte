@@ -37,10 +37,6 @@
   let allValid = false
   let displayColumn = null
 
-  $: {
-    console.log(error, name, allValid)
-  }
-
   function getAutoColumns() {
     const selectedAutoColumns = {}
 

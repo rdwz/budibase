@@ -27,7 +27,6 @@ export const parseFile = (e) => {
     let reader = new FileReader()
 
     const resolveRows = (rows, schema = null) => {
-      console.log(rows, schema);
       resolve({
         rows,
         schema: schema ?? getDefaultSchema(rows),
@@ -48,7 +47,6 @@ export const parseFile = (e) => {
       }
       else if (file.type === 'application/json') {
         const parsedFileData = JSON.parse(fileData);
-        console.log(parsedFileData);
 
         if (Array.isArray(parsedFileData)) {
           resolveRows(parsedFileData);

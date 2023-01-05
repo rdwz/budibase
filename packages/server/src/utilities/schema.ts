@@ -19,6 +19,9 @@ interface SchemaValidation {
   [index: string]: boolean;
 }
 
+type columnsPresentInSchemaButNotInData = Array<string>
+type columnsPresentInDataButNotInSchema = Array<string>
+
 const PARSERS: any = {
   [FieldTypes.NUMBER]: (attribute?: string) => {
     if (!attribute) {

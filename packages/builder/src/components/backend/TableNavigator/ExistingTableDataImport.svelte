@@ -11,9 +11,10 @@
   let loading = false;
   let validation = {}
   let validateHash = ''
+  let schema = null
 
+  export let tableId = null
   export let rows = []
-  export let schema = {}
   export let allValid = false
   export let displayColumn = null
 
@@ -48,6 +49,19 @@
     },
   ]
 
+  $: {
+    schema = fetchSchema(tableId)
+  }
+
+  async function fetchSchema(tableId) {
+    try {
+      const definition = await API.fetchTableDefinition(tableId);
+      schema = definition.schema
+    } catch (e) {
+      error = e
+    }
+  }
+
   async function handleFile(e) {
     loading = true
     error = null
@@ -56,6 +70,8 @@
     try {
       const response = await parseFile(e)
       rows = response.rows
+      fileName = response.fileName
+      fileType = response.fileType
     } catch (e) {
       loading = false
       // TODO change to use proper errors
@@ -71,8 +87,8 @@
 
     try {
       if (rows.length > 0) {
-        validation = await API.validateNewTableImport({ rows, schema });
-        allValid = Object.values(validation).every(column => column.isValid)
+        validation = await API.validateExistingTableImport({ rows, tableId });
+        allValid = Object.values(validation).every(column => column)
       }
     } catch (e) {
       error = e.message
@@ -94,7 +110,7 @@
 </script>
 
 <div class="dropzone">
-  <input disabled={loading} id="file-upload" accept="text/csv,application/json" type="file" on:change={handleFile} />
+  <input disabled={!schema || loading} id="file-upload" accept="text/csv,application/json" type="file" on:change={handleFile} />
   <label for="file-upload" class:uploaded={rows.length > 0}>
     {#if loading}
       loading...
@@ -119,28 +135,13 @@
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
+          disabled
         />
-        <span class={loading || validation[column.name]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column.name]?.isValid ? "Success" : "Failure"}
+        <span class={loading || validation[column.name] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[column.name] ? "Success" : "Failure"}
         </span>
-        <i
-          class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}
-          on:click={() => {
-            delete schema[column.name]
-            schema = schema
-          }}
-        />
       </div>
     {/each}
-  </div>
-  <div class="display-column">
-    <Select
-      label="Display Column"
-      bind:value={displayColumn}
-      options={Object.keys(schema)}
-      sort
-    />
   </div>
 {/if}
 

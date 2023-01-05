@@ -16,10 +16,7 @@ interface Row {
 type Rows = Array<Row>
 
 interface SchemaValidation {
-  [index: string]: {
-    isValid:  boolean;
-    columnType: FieldTypes
-  }
+  [index: string]: boolean;
 }
 
 const PARSERS: any = {
@@ -69,10 +66,7 @@ export function validate(rows: Rows, schema: Schema): SchemaValidation {
       return true
     });
 
-    results[columnName] = {
-      isValid: rowValidity.every(rowValid => rowValid),
-      columnType
-    }
+    results[columnName] = rowValidity.every(rowValid => rowValid)
   });
 
   return results
@@ -83,6 +77,11 @@ export function parse(rows: Rows, schema: Schema): Rows {
     const parsedRow: Row = {}
 
     Object.entries(row).forEach(([columnName, columnData]) => {
+      if (!(columnName in schema)) {
+        // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
+        return;
+      }
+
       const columnType = schema[columnName].type;
 
       if (columnType === FieldTypes.NUMBER) {

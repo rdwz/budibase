@@ -129,11 +129,11 @@ export function importToRows(data: any, table: any, user: any = {}) {
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, dataImport: any) {
-  const rows: unknown = dataImport?.rows
-  const schema: unknown = dataImport?.schema
+export async function handleDataImport(user: any, table: any, rows: any) {
+  const schema: unknown = table.schema
 
-  if (!dataImport || !isRows(rows) || !isSchema(schema)) {
+  if (!rows || !isRows(rows) || !isSchema(schema)) {
+    console.log('failed');
     return table
   }
 

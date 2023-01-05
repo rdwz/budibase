@@ -49,15 +49,6 @@
     return selectedAutoColumns
   }
 
-  // Changes the schema format from the minimal version used in data import validation to the more fleshed out format used in table creation.
-  function getFormattedSchema() {
-    return Object.entries(schema).map(([name, type]) => ({
-      name,
-      type,
-      constraints: FIELDS[type.toUpperCase()].constraints,
-    }));
-  }
-
 
   function checkValid(evt) {
     const tableName = evt.target.value
@@ -71,11 +62,8 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: { ...getFormattedSchema(), ...getAutoColumns() },
-      dataImport: {
-        schema,
-        rows,
-      },
+      schema: { ...schema, ...getAutoColumns() },
+      dataImport: rows,
       type: "internal",
       sourceId: targetDatasourceId,
     }

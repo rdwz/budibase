@@ -103,8 +103,6 @@ export async function csvToJson(ctx: BBContext) {
 
   const result = await csv().fromString(csvString)
 
-  // TODO handle schema 
-
   ctx.status = 200
   ctx.body = result
 }
@@ -121,21 +119,21 @@ export async function validateNewTableImport(ctx: BBContext) {
 }
 
 export async function validateExistingTableImport(ctx: BBContext) {
-}
+  const { rows, tableId }: { rows: unknown, tableId: unknown } = ctx.request.body
 
-export async function validateCSVSchema(ctx: BBContext) {
-  // tableId being specified means its an import to an existing table
-  const { csvString, schema = {}, tableId } = ctx.request.body
-  let existingTable
+  let schema = null;
   if (tableId) {
-    existingTable = await sdk.tables.getTable(tableId)
+    const table = await sdk.tables.getTable(tableId)
+    schema = table.schema
+  } else {
+    ctx.status = 422
+    return
   }
-  let result: Record<string, any> | undefined = await csvParser.parse(
-    csvString,
-    schema
-  )
-  if (existingTable) {
-    result = csvParser.updateSchema({ schema: result, existingTable })
+
+  if (tableId && isRows(rows) && isSchema(schema)) {
+    ctx.status = 200
+    ctx.body = validateSchema(rows, schema)
+  } else {
+    ctx.status = 422
   }
-  ctx.body = { schema: result }
 }

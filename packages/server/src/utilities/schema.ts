@@ -1,7 +1,12 @@
 import { FieldTypes } from "../constants"
 
+interface SchemaColumn {
+  readonly name: string;
+  readonly type: FieldTypes;
+}
+
 interface Schema {
-  readonly [index: string]: FieldTypes
+  readonly [index: string]: SchemaColumn
 }
 
 interface Row {
@@ -33,8 +38,11 @@ const PARSERS: any = {
 }
 
 export function isSchema(schema: any): schema is Schema {
-  return typeof schema === 'object' && Object.values(schema).every(column => typeof column === 'string' && Object.values(FieldTypes).includes(column as FieldTypes))
+  return typeof schema === 'object' && Object.values(schema).every(rawColumn => {
+    const column = rawColumn as SchemaColumn
 
+    return column !== null && typeof column === 'object' && typeof column.type === 'string' && Object.values(FieldTypes).includes(column.type as FieldTypes)
+  })
 }
 
 export function isRows(rows: any): rows is Rows {
@@ -44,7 +52,7 @@ export function isRows(rows: any): rows is Rows {
 export function validate(rows: Rows, schema: Schema): SchemaValidation {
   const results: SchemaValidation = {}
 
-  Object.entries(schema).forEach(([columnName, columnType]) => {
+  Object.values(schema).forEach(({ name: columnName, type: columnType }) => {
     const rowValidity = rows.map(row => {
       const columnData: any = row[columnName];
 
@@ -75,7 +83,7 @@ export function parse(rows: Rows, schema: Schema): Rows {
     const parsedRow: Row = {}
 
     Object.entries(row).forEach(([columnName, columnData]) => {
-      const columnType = schema[columnName];
+      const columnType = schema[columnName].type;
 
       if (columnType === FieldTypes.NUMBER) {
         // If provided must be a valid number

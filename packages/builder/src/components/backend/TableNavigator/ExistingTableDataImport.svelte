@@ -11,12 +11,11 @@
   let loading = false;
   let validation = {}
   let validateHash = ''
-  let schema = {}
 
-  export let displayColumn = null
-  export let tableId = null
   export let rows = []
+  export let schema = {}
   export let allValid = false
+  export let displayColumn = null
 
   const typeOptions = [
     {
@@ -57,9 +56,9 @@
     try {
       const response = await parseFile(e)
       rows = response.rows
-      fileName = response.fileName
     } catch (e) {
       loading = false
+      // TODO change to use proper errors
       error = e
     }
   }
@@ -74,7 +73,6 @@
       if (rows.length > 0) {
         validation = await API.validateNewTableImport({ rows, schema });
         allValid = Object.values(validation).every(column => column.isValid)
-        schema = Object.values(validation).every(column => column.isValid).map(column => column.columnType)
       }
     } catch (e) {
       error = e.message
@@ -111,27 +109,33 @@
 </div>
 {#if rows.length > 0 && !error}
   <div class="schema-fields">
-    {#each Object.keys(schema) as column}
+    {#each Object.values(schema) as column}
       <div class="field">
-        <span>{column}</span>
+        <span>{column.name}</span>
         <Select
-          bind:value={schema[column]}
-          on:change={e => schema[column] = e.detail}
+          bind:value={column.type}
+          on:change={e => column.type = e.detail}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={true}
+          disabled={loading}
         />
-        <span class={loading || validation[column]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column]?.isValid ? "Success" : "Failure"}
+        <span class={loading || validation[column.name]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[column.name]?.isValid ? "Success" : "Failure"}
         </span>
+        <i
+          class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}
+          on:click={() => {
+            delete schema[column.name]
+            schema = schema
+          }}
+        />
       </div>
     {/each}
   </div>
   <div class="display-column">
     <Select
-      disabled
       label="Display Column"
       bind:value={displayColumn}
       options={Object.keys(schema)}

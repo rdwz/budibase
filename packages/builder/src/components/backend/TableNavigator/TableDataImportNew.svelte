@@ -112,25 +112,25 @@
 </div>
 {#if rows.length > 0 && !error}
   <div class="schema-fields">
-    {#each Object.keys(schema) as column}
+    {#each Object.values(schema) as column}
       <div class="field">
-        <span>{column}</span>
+        <span>{column.name}</span>
         <Select
-          bind:value={schema[column]}
-          on:change={e => schema[column] = e.detail}
+          bind:value={column.type}
+          on:change={e => column.type = e.detail}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
           disabled={loading}
         />
-        <span class={loading || validation[column]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column]?.isValid ? "Success" : "Failure"}
+        <span class={loading || validation[column.name]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[column.name]?.isValid ? "Success" : "Failure"}
         </span>
         <i
           class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}
           on:click={() => {
-            delete schema[column]
+            delete schema[column.name]
             schema = schema
           }}
         />

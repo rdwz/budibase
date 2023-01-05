@@ -110,14 +110,11 @@ export async function csvToJson(ctx: BBContext) {
 }
 
 export async function validateNewTableImport(ctx: BBContext) {
-    console.log('super before validate');
   const { rows, schema }: { rows: unknown, schema: unknown } = ctx.request.body
 
   if (isRows(rows) && isSchema(schema)) {
     ctx.status = 200
-    console.log('before validate');
     ctx.body = validateSchema(rows, schema)
-    console.log('after validate');
   } else {
     ctx.status = 422
   }

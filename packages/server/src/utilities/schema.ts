@@ -11,7 +11,10 @@ interface Row {
 type Rows = Array<Row>
 
 interface SchemaValidation {
-  [index: string]: boolean
+  [index: string]: {
+    isValid:  boolean;
+    columnType: FieldTypes
+  }
 }
 
 const PARSERS: any = {
@@ -58,7 +61,10 @@ export function validate(rows: Rows, schema: Schema): SchemaValidation {
       return true
     });
 
-    results[columnName] = rowValidity.every(rowValid => rowValid)
+    results[columnName] = {
+      isValid: rowValidity.every(rowValid => rowValid),
+      columnType
+    }
   });
 
   return results

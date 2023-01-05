@@ -17,37 +17,6 @@
   export let allValid = false
   export let displayColumn = null
 
-  const typeOptions = [
-    {
-      label: "Text",
-      value: FIELDS.STRING.type,
-    },
-    {
-      label: "Number",
-      value: FIELDS.NUMBER.type,
-    },
-    {
-      label: "Date",
-      value: FIELDS.DATETIME.type,
-    },
-    {
-      label: "Options",
-      value: FIELDS.OPTIONS.type,
-    },
-    {
-      label: "Multi-select",
-      value: FIELDS.ARRAY.type,
-    },
-    {
-      label: "Barcode/QR",
-      value: FIELDS.BARCODEQR.type,
-    },
-    {
-      label: "Long Form Text",
-      value: FIELDS.LONGFORM.type,
-    },
-  ]
-
   async function handleFile(e) {
     loading = true
     error = null
@@ -56,8 +25,6 @@
     try {
       const response = await parseFile(e)
       rows = response.rows
-      schema = response.schema
-      fileName = response.fileName
       fileType = response.fileType
     } catch (e) {
       loading = false
@@ -75,7 +42,7 @@
     try {
       if (rows.length > 0) {
         validation = await API.validateNewTableImport({ rows, schema });
-        allValid = Object.values(validation).every(column => column.isValid)
+        allValid = Object.values(validation).every(columnValid => columnValid)
       }
     } catch (e) {
       error = e.message
@@ -124,8 +91,8 @@
           getOptionValue={option => option.value}
           disabled={loading}
         />
-        <span class={loading || validation[column]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column]?.isValid ? "Success" : "Failure"}
+        <span class={loading || validation[column] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[column] ? "Success" : "Failure"}
         </span>
         <i
           class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}

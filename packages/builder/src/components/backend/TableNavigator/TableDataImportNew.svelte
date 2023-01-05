@@ -75,7 +75,7 @@
     try {
       if (rows.length > 0) {
         validation = await API.validateNewTableImport({ rows, schema });
-        allValid = Object.values(validation).every(columnValid => columnValid)
+        allValid = Object.values(validation).every(column => column.isValid)
       }
     } catch (e) {
       error = e.message
@@ -124,8 +124,8 @@
           getOptionValue={option => option.value}
           disabled={loading}
         />
-        <span class={loading || validation[column] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column] ? "Success" : "Failure"}
+        <span class={loading || validation[column]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[column]?.isValid ? "Success" : "Failure"}
         </span>
         <i
           class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}

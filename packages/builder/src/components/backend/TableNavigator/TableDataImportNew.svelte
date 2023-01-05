@@ -74,7 +74,6 @@
 
     try {
       if (rows.length > 0) {
-        console.log('running');
         validation = await API.validateNewTableImport({ rows, schema });
         allValid = Object.values(validation).every(columnValid => columnValid)
       }
@@ -111,7 +110,7 @@
     {/if}
   </label>
 </div>
-{#if rows && !error}
+{#if rows.length > 0 && !error}
   <div class="schema-fields">
     {#each Object.keys(schema) as column}
       <div class="field">
@@ -137,6 +136,14 @@
         />
       </div>
     {/each}
+  </div>
+  <div class="display-column">
+    <Select
+      label="Display Column"
+      bind:value={displayColumn}
+      options={Object.keys(schema)}
+      sort
+    />
   </div>
 {/if}
 
@@ -220,5 +227,9 @@
   .omit-button-disabled {
     pointer-events: none;
     opacity: 70%;
+  }
+
+  .display-column {
+    margin-top: var(--spacing-xl);
   }
 </style>

@@ -129,16 +129,16 @@ export function importToRows(data: any, table: any, user: any = {}) {
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, dataImport: unknown) {
-  const schema: unknown = table.schema
+export async function handleDataImport(user: any, table: any, dataImport: any) {
+  const rows: unknown = dataImport?.rows
+  const schema: unknown = dataImport?.schema
 
-  if (!dataImport || !isRows(dataImport) || !isSchema(schema)) {
-    console.log("failure")
+  if (!dataImport || !isRows(rows) || !isSchema(schema)) {
     return table
   }
 
   const db = context.getAppDB()
-  const data = parse(dataImport, schema)
+  const data = parse(rows, schema)
   console.log(data)
 
   let finalData: any = importToRows(data, table, user)
@@ -242,6 +242,7 @@ class TableSaveFunctions {
 
   // after saving
   async after(table: any) {
+    // TODO does handleSearchIndexes need to return a value?
     table = await handleSearchIndexes(table)
     table = await handleDataImport(this.user, table, this.dataImport)
     return table

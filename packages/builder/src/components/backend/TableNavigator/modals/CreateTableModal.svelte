@@ -72,7 +72,10 @@
     let newTable = {
       name,
       schema: { ...getFormattedSchema(), ...getAutoColumns() },
-      dataImport: rows,
+      dataImport: {
+        schema,
+        rows,
+      },
       type: "internal",
       sourceId: targetDatasourceId,
     }

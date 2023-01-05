@@ -18,7 +18,7 @@ export function tableValidator() {
     schema: Joi.object().required(),
     name: Joi.string().required(),
     views: Joi.object(),
-    dataImport: Joi.array(),
+    dataImport: Joi.object(),
   }).unknown(true))
 }
 

@@ -1,21 +1,107 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, InlineAlert, notifications } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
-  import { parseFile } from './utils';
 
-  let error = null
-  let fileName = null
-  let fileType = null
+  const BYTES_IN_MB = 1000000
+  const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
 
-  let loading = false;
-  let validation = {}
-  let validateHash = ''
+  export let files = []
+  export let dataImport = {
+    valid: true,
+    schema: {},
+  }
+  export let existingTableId
 
-  export let rows = []
-  export let schema = {}
-  export let allValid = false
-  export let displayColumn = null
+  let csvString = undefined
+  let primaryDisplay = undefined
+  let schema = {}
+  let fields = []
+  let hasValidated = false
+
+  $: valid =
+    !schema ||
+    (fields.every(column => schema[column].success) &&
+      (!hasValidated || Object.keys(schema).length > 0))
+  $: dataImport = {
+    valid,
+    schema: buildTableSchema(schema),
+    csvString,
+    primaryDisplay,
+  }
+  $: noFieldsError = existingTableId
+    ? "No columns in CSV match existing table schema"
+    : "Could not find any columns to import"
+
+  function buildTableSchema(schema) {
+    const tableSchema = {}
+    for (let key in schema) {
+      const type = schema[key].type
+
+      if (type === "omit") continue
+
+      tableSchema[key] = {
+        name: key,
+        type,
+        constraints: FIELDS[type.toUpperCase()].constraints,
+      }
+    }
+    return tableSchema
+  }
+
+  async function validateCSV() {
+    try {
+      const parseResult = await API.validateTableCSV({
+        csvString,
+        schema: schema || {},
+        tableId: existingTableId,
+      })
+      schema = parseResult?.schema
+      fields = Object.keys(schema || {}).filter(
+        key => schema[key].type !== "omit"
+      )
+
+      // Check primary display is valid
+      if (!primaryDisplay || fields.indexOf(primaryDisplay) === -1) {
+        primaryDisplay = fields[0]
+      }
+
+      hasValidated = true
+    } catch (error) {
+      notifications.error("CSV Invalid, please try another CSV file")
+    }
+  }
+
+  async function handleFile(evt) {
+    const fileArray = Array.from(evt.target.files)
+    if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
+      notifications.error(
+        `Files cannot exceed ${
+          FILE_SIZE_LIMIT / BYTES_IN_MB
+        }MB. Please try again with smaller files.`
+      )
+      return
+    }
+
+    // Read CSV as plain text to upload alongside schema
+    let reader = new FileReader()
+    reader.addEventListener("load", function (e) {
+      csvString = e.target.result
+      files = fileArray
+      validateCSV()
+    })
+    reader.readAsText(fileArray[0])
+  }
+
+  async function omitColumn(columnName) {
+    schema[columnName].type = "omit"
+    await validateCSV()
+  }
+
+  const handleTypeChange = column => evt => {
+    schema[column].type = evt.detail
+    validateCSV()
+  }
 
   const typeOptions = [
     {
@@ -47,102 +133,54 @@
       value: FIELDS.LONGFORM.type,
     },
   ]
-
-  async function handleFile(e) {
-    loading = true
-    error = null
-    validation = {}
-
-    try {
-      const response = await parseFile(e)
-      rows = response.rows
-      schema = response.schema
-      fileName = response.fileName
-      fileType = response.fileType
-    } catch (e) {
-      loading = false
-      // TODO change to use proper errors
-      error = e
-    }
-  }
-
-  async function validate(rows, schema) {
-    loading = true;
-    error = null
-    validation = {}
-    allValid = false
-
-    try {
-      if (rows.length > 0) {
-        validation = await API.validateNewTableImport({ rows, schema });
-        allValid = Object.values(validation).every(column => column.isValid)
-      }
-    } catch (e) {
-      error = e.message
-    }
-
-    loading = false;
-  }
-
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
-
-    if (newValidateHash !== validateHash) {
-      validate(rows, schema)
-    }
-
-    validateHash = newValidateHash
-  }
 </script>
 
 <div class="dropzone">
-  <input disabled={loading} id="file-upload" accept="text/csv,application/json" type="file" on:change={handleFile} />
-  <label for="file-upload" class:uploaded={rows.length > 0}>
-    {#if loading}
-      loading...
-    {:else if error}
-      error: {error}
-    {:else if fileName}
-      {fileName}
-    {:else}
-      Upload
-    {/if}
+  <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
+  <label for="file-upload" class:uploaded={files[0]}>
+    {#if files[0]}{files[0].name}{:else}Upload{/if}
   </label>
 </div>
-{#if rows.length > 0 && !error}
+{#if fields.length}
   <div class="schema-fields">
-    {#each Object.keys(schema) as column}
+    {#each fields as columnName}
       <div class="field">
-        <span>{column}</span>
+        <span>{columnName}</span>
         <Select
-          bind:value={schema[column]}
-          on:change={e => schema[column] = e.detail}
+          bind:value={schema[columnName].type}
+          on:change={handleTypeChange(columnName)}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
+          disabled={!!existingTableId}
         />
-        <span class={loading || validation[column]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column]?.isValid ? "Success" : "Failure"}
+        <span class="field-status" class:error={!schema[columnName].success}>
+          {schema[columnName].success ? "Success" : "Failure"}
         </span>
         <i
-          class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}
-          on:click={() => {
-            delete schema[column]
-            schema = schema
-          }}
+          class="omit-button ri-close-circle-fill"
+          on:click={() => omitColumn(columnName)}
         />
       </div>
     {/each}
   </div>
-  <div class="display-column">
-    <Select
-      label="Display Column"
-      bind:value={displayColumn}
-      options={Object.keys(schema)}
-      sort
+  {#if !existingTableId}
+    <div class="display-column">
+      <Select
+        label="Display Column"
+        bind:value={primaryDisplay}
+        options={fields}
+        sort
+      />
+    </div>
+  {/if}
+{:else if hasValidated}
+  <div>
+    <InlineAlert
+      header="Invalid CSV"
+      bind:message={noFieldsError}
+      type="error"
     />
   </div>
 {/if}
@@ -157,8 +195,26 @@
     transition: all 0.3s;
   }
 
-  input {
+  .field-status {
+    color: var(--green);
+    justify-self: center;
+    font-weight: 600;
+  }
+
+  .error {
+    color: var(--red);
+  }
+
+  .uploaded {
+    color: var(--blue);
+  }
+
+  input[type="file"] {
     display: none;
+  }
+
+  .schema-fields {
+    margin-top: var(--spacing-xl);
   }
 
   label {
@@ -188,12 +244,11 @@
     border: var(--border-transparent);
   }
 
-  .uploaded {
-    color: var(--blue);
-  }
-
-  .schema-fields {
-    margin-top: var(--spacing-xl);
+  .omit-button {
+    font-size: 1.2em;
+    color: var(--grey-7);
+    cursor: pointer;
+    justify-self: flex-end;
   }
 
   .field {
@@ -203,30 +258,6 @@
     align-items: center;
     grid-gap: var(--spacing-m);
     font-size: var(--spectrum-global-dimension-font-size-75);
-  }
-
-  .fieldStatusSuccess {
-    color: var(--green);
-    justify-self: center;
-    font-weight: 600;
-  }
-
-  .fieldStatusFailure {
-    color: var(--red);
-    justify-self: center;
-    font-weight: 600;
-  }
-
-  .omit-button {
-    font-size: 1.2em;
-    color: var(--grey-7);
-    cursor: pointer;
-    justify-self: flex-end;
-  }
-
-  .omit-button-disabled {
-    pointer-events: none;
-    opacity: 70%;
   }
 
   .display-column {

@@ -139,7 +139,8 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
 
   const db = context.getAppDB()
   const data = parse(rows, schema)
-  console.log(data)
+  console.log(table.schema)
+  console.log(schema);
 
   let finalData: any = importToRows(data, table, user)
 

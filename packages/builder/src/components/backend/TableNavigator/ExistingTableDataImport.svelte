@@ -11,11 +11,43 @@
   let loading = false;
   let validation = {}
   let validateHash = ''
+  let schema = {}
 
-  export let rows = []
-  export let schema = {}
-  export let allValid = false
   export let displayColumn = null
+  export let tableId = null
+  export let rows = []
+  export let allValid = false
+
+  const typeOptions = [
+    {
+      label: "Text",
+      value: FIELDS.STRING.type,
+    },
+    {
+      label: "Number",
+      value: FIELDS.NUMBER.type,
+    },
+    {
+      label: "Date",
+      value: FIELDS.DATETIME.type,
+    },
+    {
+      label: "Options",
+      value: FIELDS.OPTIONS.type,
+    },
+    {
+      label: "Multi-select",
+      value: FIELDS.ARRAY.type,
+    },
+    {
+      label: "Barcode/QR",
+      value: FIELDS.BARCODEQR.type,
+    },
+    {
+      label: "Long Form Text",
+      value: FIELDS.LONGFORM.type,
+    },
+  ]
 
   async function handleFile(e) {
     loading = true
@@ -25,10 +57,9 @@
     try {
       const response = await parseFile(e)
       rows = response.rows
-      fileType = response.fileType
+      fileName = response.fileName
     } catch (e) {
       loading = false
-      // TODO change to use proper errors
       error = e
     }
   }
@@ -42,7 +73,8 @@
     try {
       if (rows.length > 0) {
         validation = await API.validateNewTableImport({ rows, schema });
-        allValid = Object.values(validation).every(columnValid => columnValid)
+        allValid = Object.values(validation).every(column => column.isValid)
+        schema = Object.values(validation).every(column => column.isValid).map(column => column.columnType)
       }
     } catch (e) {
       error = e.message
@@ -89,23 +121,17 @@
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
+          disabled={true}
         />
-        <span class={loading || validation[column] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column] ? "Success" : "Failure"}
+        <span class={loading || validation[column]?.isValid ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[column]?.isValid ? "Success" : "Failure"}
         </span>
-        <i
-          class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}
-          on:click={() => {
-            delete schema[column]
-            schema = schema
-          }}
-        />
       </div>
     {/each}
   </div>
   <div class="display-column">
     <Select
+      disabled
       label="Display Column"
       bind:value={displayColumn}
       options={Object.keys(schema)}

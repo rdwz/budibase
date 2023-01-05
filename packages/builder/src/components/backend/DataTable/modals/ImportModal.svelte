@@ -6,7 +6,7 @@
     Body,
     Layout,
   } from "@budibase/bbui"
-  import TableDataImport from "../../TableNavigator/TableDataImport.svelte"
+  import TableDataImport from "../../TableNavigator/ExistingTableDataImport.svelte"
   import { API } from "api"
   import { createEventDispatcher } from "svelte"
 
@@ -45,6 +45,6 @@
   </Body>
   <Layout gap="XS" noPadding>
     <Label grey extraSmall>CSV to import</Label>
-    <TableDataImport bind:dataImport bind:existingTableId={tableId} />
+      <TableDataImport tableId={tableId} bind:dataImport />
   </Layout>
 </ModalContent>

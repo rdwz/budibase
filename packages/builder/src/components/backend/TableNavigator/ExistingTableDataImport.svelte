@@ -2,22 +2,21 @@
   import { Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
-  import { parseFile } from './utils';
+  import { parseFile } from "./utils"
 
   let error = null
   let fileName = null
   let fileType = null
 
-  let loading = false;
+  let loading = false
   let validation = {}
-  let validateHash = ''
+  let validateHash = ""
   let schema = null
   let invalidColumns = []
 
   export let tableId = null
   export let rows = []
   export let allValid = false
-  export let displayColumn = null
 
   const typeOptions = [
     {
@@ -56,7 +55,7 @@
 
   async function fetchSchema(tableId) {
     try {
-      const definition = await API.fetchTableDefinition(tableId);
+      const definition = await API.fetchTableDefinition(tableId)
       schema = definition.schema
     } catch (e) {
       error = e
@@ -80,15 +79,18 @@
     }
   }
 
-  async function validate(rows, schema) {
-    loading = true;
+  async function validate(rows) {
+    loading = true
     error = null
     validation = {}
     allValid = false
 
     try {
       if (rows.length > 0) {
-        const response = await API.validateExistingTableImport({ rows, tableId });
+        const response = await API.validateExistingTableImport({
+          rows,
+          tableId,
+        })
 
         validation = response.schemaValidation
         invalidColumns = response.invalidColumns
@@ -98,15 +100,15 @@
       error = e.message
     }
 
-    loading = false;
+    loading = false
   }
 
   $: {
     // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+    const newValidateHash = JSON.stringify(rows)
 
     if (newValidateHash !== validateHash) {
-      validate(rows, schema)
+      validate(rows)
     }
 
     validateHash = newValidateHash
@@ -114,7 +116,13 @@
 </script>
 
 <div class="dropzone">
-  <input disabled={!schema || loading} id="file-upload" accept="text/csv,application/json" type="file" on:change={handleFile} />
+  <input
+    disabled={!schema || loading}
+    id="file-upload"
+    accept="text/csv,application/json"
+    type="file"
+    on:change={handleFile}
+  />
   <label for="file-upload" class:uploaded={rows.length > 0}>
     {#if loading}
       loading...
@@ -142,14 +150,21 @@
           getOptionValue={option => option.value}
           disabled
         />
-        <span class={loading || validation[name] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+        <span
+          class={loading || validation[name]
+            ? "fieldStatusSuccess"
+            : "fieldStatusFailure"}
+        >
           {validation[name] ? "Success" : "Failure"}
         </span>
       </div>
     {/each}
   </div>
   {#if invalidColumns.length > 0}
-    <p>The following columns are present in the data you wish to import, but do not match the schema of this table and will be ignored.</p>
+    <p>
+      The following columns are present in the data you wish to import, but do
+      not match the schema of this table and will be ignored.
+    </p>
     <ul>
       {#each invalidColumns as column}
         <li>{column}</li>
@@ -226,21 +241,5 @@
     color: var(--red);
     justify-self: center;
     font-weight: 600;
-  }
-
-  .omit-button {
-    font-size: 1.2em;
-    color: var(--grey-7);
-    cursor: pointer;
-    justify-self: flex-end;
-  }
-
-  .omit-button-disabled {
-    pointer-events: none;
-    opacity: 70%;
-  }
-
-  .display-column {
-    margin-top: var(--spacing-xl);
   }
 </style>

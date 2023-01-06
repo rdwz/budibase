@@ -45,6 +45,6 @@
   </Body>
   <Layout gap="XS" noPadding>
     <Label grey extraSmall>CSV to import</Label>
-      <TableDataImport tableId={tableId} bind:rows bind:allValid bind:displayColumn />
+    <TableDataImport {tableId} bind:rows bind:allValid bind:displayColumn />
   </Layout>
 </ModalContent>

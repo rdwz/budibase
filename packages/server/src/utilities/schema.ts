@@ -1,8 +1,8 @@
 import { FieldTypes } from "../constants"
 
 interface SchemaColumn {
-  readonly name: string;
-  readonly type: FieldTypes;
+  readonly name: string
+  readonly type: FieldTypes
 }
 
 interface Schema {
@@ -16,13 +16,13 @@ interface Row {
 type Rows = Array<Row>
 
 interface SchemaValidation {
-  [index: string]: boolean;
+  [index: string]: boolean
 }
 
 interface ValidationResults {
-  schemaValidation: SchemaValidation;
-  allValid: boolean;
-  invalidColumns: Array<string>;
+  schemaValidation: SchemaValidation
+  allValid: boolean
+  invalidColumns: Array<string>
 }
 
 const PARSERS: any = {
@@ -41,22 +41,30 @@ const PARSERS: any = {
 }
 
 export function isSchema(schema: any): schema is Schema {
-  return typeof schema === 'object' && Object.values(schema).every(rawColumn => {
-    const column = rawColumn as SchemaColumn
+  return (
+    typeof schema === "object" &&
+    Object.values(schema).every(rawColumn => {
+      const column = rawColumn as SchemaColumn
 
-    return column !== null && typeof column === 'object' && typeof column.type === 'string' && Object.values(FieldTypes).includes(column.type as FieldTypes)
-  })
+      return (
+        column !== null &&
+        typeof column === "object" &&
+        typeof column.type === "string" &&
+        Object.values(FieldTypes).includes(column.type as FieldTypes)
+      )
+    })
+  )
 }
 
 export function isRows(rows: any): rows is Rows {
-  return Array.isArray(rows) && rows.every(row => typeof row === 'object')
+  return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 
 export function validate(rows: Rows, schema: Schema): ValidationResults {
   const results: ValidationResults = {
     schemaValidation: {},
     allValid: false,
-    invalidColumns: []
+    invalidColumns: [],
   }
 
   rows.forEach(row => {
@@ -64,28 +72,35 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
       const columnType = schema[columnName]?.type
 
       // If the columnType is not a string, this it's not present in the schema, and should be added to the invalid columns array
-      if (typeof columnType !== 'string') {
+      if (typeof columnType !== "string") {
         results.invalidColumns.push(columnName)
       }
       // If there's no data for this field don't bother with further checks
       // If the field is already marked as invalid there's no need for further checks
-      else if (results.schemaValidation[columnName] === false || columnData == null) {
+      else if (
+        results.schemaValidation[columnName] === false ||
+        columnData == null
+      ) {
         return
       }
       // If provided must be a valid number
       else if (columnType === FieldTypes.NUMBER && isNaN(Number(columnData))) {
         results.schemaValidation[columnName] = false
-      // If provided must be a valid date
-      } else if (columnType === FieldTypes.DATETIME && isNaN(new Date(columnData).getTime())) {
+        // If provided must be a valid date
+      } else if (
+        columnType === FieldTypes.DATETIME &&
+        isNaN(new Date(columnData).getTime())
+      ) {
         results.schemaValidation[columnName] = false
       } else {
         results.schemaValidation[columnName] = true
       }
-    });
-  });
+    })
+  })
 
-  results.allValid = Object.values(results.schemaValidation).length > 0 && Object.values(results.schemaValidation).every(column => column)
-
+  results.allValid =
+    Object.values(results.schemaValidation).length > 0 &&
+    Object.values(results.schemaValidation).every(column => column)
 
   // Select unique values
   results.invalidColumns = [...new Set(results.invalidColumns)]
@@ -99,25 +114,24 @@ export function parse(rows: Rows, schema: Schema): Rows {
     Object.entries(row).forEach(([columnName, columnData]) => {
       if (!(columnName in schema)) {
         // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
-        return;
+        return
       }
 
-      const columnType = schema[columnName].type;
+      const columnType = schema[columnName].type
 
       if (columnType === FieldTypes.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
-
       } else if (columnType === FieldTypes.DATETIME) {
         // If provided must be a valid date
-        parsedRow[columnName] = columnData ? new Date(columnData).toISOString() : columnData
+        parsedRow[columnName] = columnData
+          ? new Date(columnData).toISOString()
+          : columnData
       } else {
         parsedRow[columnName] = columnData
       }
     })
 
-    return parsedRow;
-  });
-
-  return rows
+    return parsedRow
+  })
 }

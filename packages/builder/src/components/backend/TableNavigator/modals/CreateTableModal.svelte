@@ -15,7 +15,6 @@
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
-    FIELDS,
   } from "constants/backend"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
@@ -42,9 +41,13 @@
 
     Object.entries(autoColumns).forEach(([subtype, column]) => {
       if (column.enabled) {
-        selectedAutoColumns[column.name] = buildAutoColumn(name, column.name, subtype)
+        selectedAutoColumns[column.name] = buildAutoColumn(
+          name,
+          column.name,
+          subtype
+        )
       }
-    });
+    })
 
     return selectedAutoColumns
   }

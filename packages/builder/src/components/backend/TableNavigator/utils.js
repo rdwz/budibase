@@ -4,28 +4,28 @@ import { FIELDS } from "constants/backend"
 const BYTES_IN_MB = 1000000
 const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
 
-const getDefaultSchema = (rows) => {
-  const newSchema = {};
+const getDefaultSchema = rows => {
+  const newSchema = {}
 
   rows.forEach(row => {
     Object.keys(row).forEach(column => {
       newSchema[column] = {
         name: column,
-        type: 'string',
-        constraints: FIELDS['STRING'].constraints,
+        type: "string",
+        constraints: FIELDS["STRING"].constraints,
       }
-    });
-  });
+    })
+  })
 
-  return newSchema;
+  return newSchema
 }
 
-export const parseFile = (e) => {
+export const parseFile = e => {
   return new Promise((resolve, reject) => {
     const file = Array.from(e.target.files)[0]
 
     if (file.size >= FILE_SIZE_LIMIT) {
-      reject('file too large');
+      reject("file too large")
       return
     }
 
@@ -35,34 +35,34 @@ export const parseFile = (e) => {
       resolve({
         rows,
         schema: schema ?? getDefaultSchema(rows),
-        fileName: file.name, 
-        fileType: file.type
-      });
-    };
+        fileName: file.name,
+        fileType: file.type,
+      })
+    }
 
-    reader.addEventListener("load", function(e) {
-      const fileData = e.target.result;
+    reader.addEventListener("load", function (e) {
+      const fileData = e.target.result
 
-      if (file.type === 'text/csv') {
-        API.csvToJson(fileData).then(rows => {
-          resolveRows(rows);
-        }).catch(() => {
-          reject('can\'t convert csv to json');
-        })
-      }
-      else if (file.type === 'application/json') {
-        const parsedFileData = JSON.parse(fileData);
+      if (file.type === "text/csv") {
+        API.csvToJson(fileData)
+          .then(rows => {
+            resolveRows(rows)
+          })
+          .catch(() => {
+            reject("can't convert csv to json")
+          })
+      } else if (file.type === "application/json") {
+        const parsedFileData = JSON.parse(fileData)
 
         if (Array.isArray(parsedFileData)) {
-          resolveRows(parsedFileData);
-        }
-        else if (typeof parsedFileData === 'object') {
-          resolveRows(parsedFileData.rows, parsedFileData.schema);
+          resolveRows(parsedFileData)
+        } else if (typeof parsedFileData === "object") {
+          resolveRows(parsedFileData.rows, parsedFileData.schema)
         } else {
-          reject('invalid json format');
+          reject("invalid json format")
         }
       } else {
-        reject('invalid file type');
+        reject("invalid file type")
       }
     })
 

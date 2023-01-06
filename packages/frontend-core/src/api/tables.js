@@ -68,15 +68,15 @@ export const buildTableEndpoints = API => ({
     return await API.post({
       url: `/api/tables/${tableId}/import`,
       body: {
-        rows
+        rows,
       },
     })
   },
-  csvToJson: async (csvString) => {
+  csvToJson: async csvString => {
     return await API.post({
       url: "/api/convert/csvToJson",
       body: {
-        csvString
+        csvString,
       },
     })
   },
@@ -115,7 +115,7 @@ export const buildTableEndpoints = API => ({
       url: "/api/tables/validateNewTableImport",
       body: {
         rows,
-        schema
+        schema,
       },
     })
   },
@@ -127,5 +127,5 @@ export const buildTableEndpoints = API => ({
         tableId,
       },
     })
-  }
+  },
 })

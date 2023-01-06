@@ -39,9 +39,9 @@ export async function exported(table: Table, format: TableExportFormat) {
   await publishEvent(Event.TABLE_EXPORTED, properties)
 }
 
-export async function imported(table: Table){
+export async function imported(table: Table) {
   const properties: TableImportedEvent = {
-    tableId: table._id as string
+    tableId: table._id as string,
   }
   await publishEvent(Event.TABLE_IMPORTED, properties)
 }

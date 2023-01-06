@@ -1,6 +1,10 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import { validate as validateSchema, isSchema, isRows } from "../../../utilities/schema"
+import {
+  validate as validateSchema,
+  isSchema,
+  isRows,
+} from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { getDatasourceParams } from "../../../db/utils"
 import { context, events } from "@budibase/backend-core"
@@ -107,7 +111,7 @@ export async function csvToJson(ctx: BBContext) {
 }
 
 export async function validateNewTableImport(ctx: BBContext) {
-  const { rows, schema }: { rows: unknown, schema: unknown } = ctx.request.body
+  const { rows, schema }: { rows: unknown; schema: unknown } = ctx.request.body
 
   if (isRows(rows) && isSchema(schema)) {
     ctx.status = 200
@@ -118,9 +122,10 @@ export async function validateNewTableImport(ctx: BBContext) {
 }
 
 export async function validateExistingTableImport(ctx: BBContext) {
-  const { rows, tableId }: { rows: unknown, tableId: unknown } = ctx.request.body
+  const { rows, tableId }: { rows: unknown; tableId: unknown } =
+    ctx.request.body
 
-  let schema = null;
+  let schema = null
   if (tableId) {
     const table = await sdk.tables.getTable(tableId)
     schema = table.schema

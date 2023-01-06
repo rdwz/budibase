@@ -2,15 +2,15 @@
   import { Select } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
-  import { parseFile } from './utils';
+  import { parseFile } from "./utils"
 
   let error = null
   let fileName = null
   let fileType = null
 
-  let loading = false;
+  let loading = false
   let validation = {}
-  let validateHash = ''
+  let validateHash = ""
 
   export let rows = []
   export let schema = {}
@@ -67,14 +67,14 @@
   }
 
   async function validate(rows, schema) {
-    loading = true;
+    loading = true
     error = null
     validation = {}
     allValid = false
 
     try {
       if (rows.length > 0) {
-        const response = await API.validateNewTableImport({ rows, schema });
+        const response = await API.validateNewTableImport({ rows, schema })
         validation = response.schemaValidation
         allValid = response.allValid
       }
@@ -82,7 +82,7 @@
       error = e.message
     }
 
-    loading = false;
+    loading = false
   }
 
   $: {
@@ -98,7 +98,13 @@
 </script>
 
 <div class="dropzone">
-  <input disabled={loading} id="file-upload" accept="text/csv,application/json" type="file" on:change={handleFile} />
+  <input
+    disabled={loading}
+    id="file-upload"
+    accept="text/csv,application/json"
+    type="file"
+    on:change={handleFile}
+  />
   <label for="file-upload" class:uploaded={rows.length > 0}>
     {#if loading}
       loading...
@@ -118,18 +124,24 @@
         <span>{column.name}</span>
         <Select
           bind:value={column.type}
-          on:change={e => column.type = e.detail}
+          on:change={e => (column.type = e.detail)}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
           disabled={loading}
         />
-        <span class={loading || validation[column.name] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+        <span
+          class={loading || validation[column.name]
+            ? "fieldStatusSuccess"
+            : "fieldStatusFailure"}
+        >
           {validation[column.name] ? "Success" : "Failure"}
         </span>
         <i
-          class={`omit-button ri-close-circle-fill ${loading ? 'omit-button-disabled' : ''}`}
+          class={`omit-button ri-close-circle-fill ${
+            loading ? "omit-button-disabled" : ""
+          }`}
           on:click={() => {
             delete schema[column.name]
             schema = schema

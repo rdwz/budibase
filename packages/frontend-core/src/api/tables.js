@@ -72,23 +72,6 @@ export const buildTableEndpoints = API => ({
       },
     })
   },
-
-  /**
-   * Validates a candidate CSV to be imported for a certain table.
-   * @param tableId the table ID to import to
-   * @param csvString the CSV contents as a string
-   * @param schema the proposed schema
-   */
-  validateTableCSV: async ({ tableId, csvString, schema }) => {
-    return await API.post({
-      url: "/api/tables/csv/validate",
-      body: {
-        csvString,
-        schema,
-        tableId,
-      },
-    })
-  },
   csvToJson: async (csvString) => {
     return await API.post({
       url: "/api/convert/csvToJson",

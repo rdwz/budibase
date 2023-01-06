@@ -11,7 +11,7 @@
     Layout,
   } from "@budibase/bbui"
   import { datasources } from "stores/backend"
-  import TableDataImport from "../TableDataImportNew.svelte"
+  import TableDataImport from "../TableDataImport.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
@@ -48,7 +48,6 @@
 
     return selectedAutoColumns
   }
-
 
   function checkValid(evt) {
     const tableName = evt.target.value

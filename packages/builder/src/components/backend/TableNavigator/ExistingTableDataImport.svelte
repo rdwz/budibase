@@ -141,6 +141,7 @@
           {validation[column.name] ? "Success" : "Failure"}
         </span>
       </div>
+      <p>The following columns are present in your data, but do not match
     {/each}
   </div>
 {/if}

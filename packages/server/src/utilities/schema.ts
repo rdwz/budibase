@@ -19,8 +19,11 @@ interface SchemaValidation {
   [index: string]: boolean;
 }
 
-type columnsPresentInSchemaButNotInData = Array<string>
-type columnsPresentInDataButNotInSchema = Array<string>
+interface ValidationResults {
+  schemaValidation: SchemaValidation;
+  allValid: boolean;
+  invalidColumns: Array<string>;
+}
 
 const PARSERS: any = {
   [FieldTypes.NUMBER]: (attribute?: string) => {
@@ -49,29 +52,43 @@ export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === 'object')
 }
 
-export function validate(rows: Rows, schema: Schema): SchemaValidation {
-  const results: SchemaValidation = {}
+export function validate(rows: Rows, schema: Schema): ValidationResults {
+  const results: ValidationResults = {
+    schemaValidation: {},
+    allValid: false,
+    invalidColumns: []
+  }
 
-  Object.values(schema).forEach(({ name: columnName, type: columnType }) => {
-    const rowValidity = rows.map(row => {
-      const columnData: any = row[columnName];
+  rows.forEach(row => {
+    Object.entries(row).forEach(([columnName, columnData]) => {
+      const columnType = schema[columnName]?.type
 
-      if (columnType === FieldTypes.NUMBER) {
-        // If provided must be a valid number
-        return !columnData || !isNaN(Number(columnData))
-
-      } else if (columnType === FieldTypes.DATETIME) {
-        // If provided must be a valid date
-        return !columnData || !isNaN(new Date(columnData).getTime())
+      // If the columnType is not a string, this it's not present in the schema, and should be added to the invalid columns array
+      if (typeof columnType !== 'string') {
+        results.invalidColumns.push(columnName)
       }
-
-      // Any other column type accepts anything
-      return true
+      // If there's no data for this field don't bother with further checks
+      // If the field is already marked as invalid there's no need for further checks
+      else if (results.schemaValidation[columnName] === false || columnData == null) {
+        return
+      }
+      // If provided must be a valid number
+      else if (columnType === FieldTypes.NUMBER && isNaN(Number(columnData))) {
+        results.schemaValidation[columnName] = false
+      // If provided must be a valid date
+      } else if (columnType === FieldTypes.DATETIME && isNaN(new Date(columnData).getTime())) {
+        results.schemaValidation[columnName] = false
+      } else {
+        results.schemaValidation[columnName] = true
+      }
     });
-
-    results[columnName] = rowValidity.every(rowValid => rowValid)
   });
 
+  results.allValid = Object.values(results.schemaValidation).length > 0 && Object.values(results.schemaValidation).every(column => column)
+
+
+  // Select unique values
+  results.invalidColumns = [...new Set(results.invalidColumns)]
   return results
 }
 

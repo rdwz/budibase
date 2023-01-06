@@ -74,8 +74,9 @@
 
     try {
       if (rows.length > 0) {
-        validation = await API.validateNewTableImport({ rows, schema });
-        allValid = Object.values(validation).every(column => column)
+        const response = await API.validateNewTableImport({ rows, schema });
+        validation = response.schemaValidation
+        allValid = response.allValid
       }
     } catch (e) {
       error = e.message

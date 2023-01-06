@@ -35,8 +35,9 @@ function checkAutoColumns(table: Table, oldTable: Table) {
 }
 
 export async function save(ctx: any) {
+  console.log('saving internal');
   const db = context.getAppDB()
-  const { dataImport, ...rest } = ctx.request.body
+  const { rows, ...rest } = ctx.request.body
   let tableToSave = {
     type: "table",
     _id: generateTableID(),
@@ -62,7 +63,7 @@ export async function save(ctx: any) {
   const tableSaveFunctions = new TableSaveFunctions({
     user: ctx.user,
     oldTable,
-    dataImport,
+    importRows: rows,
   })
   tableToSave = await tableSaveFunctions.before(tableToSave)
 

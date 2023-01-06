@@ -209,14 +209,14 @@ class TableSaveFunctions {
   db: any
   user: any
   oldTable: any
-  dataImport: any
+  importRows: any
   rows: any
 
-  constructor({ user, oldTable, dataImport }: any) {
+  constructor({ user, oldTable, importRows }: any) {
     this.db = context.getAppDB()
     this.user = user
     this.oldTable = oldTable
-    this.dataImport = dataImport
+    this.importRows = importRows
     // any rows that need updated
     this.rows = []
   }
@@ -241,7 +241,7 @@ class TableSaveFunctions {
   async after(table: any) {
     // TODO does handleSearchIndexes need to return a value?
     table = await handleSearchIndexes(table)
-    table = await handleDataImport(this.user, table, this.dataImport)
+    table = await handleDataImport(this.user, table, this.importRows)
     return table
   }
 

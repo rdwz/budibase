@@ -64,11 +64,11 @@ export const buildTableEndpoints = API => ({
    * @param tableId the table ID to import to
    * @param data the data import object
    */
-  importTableData: async ({ tableId, data }) => {
+  importTableData: async ({ tableId, rows }) => {
     return await API.post({
       url: `/api/tables/${tableId}/import`,
       body: {
-        dataImport: data,
+        rows
       },
     })
   },

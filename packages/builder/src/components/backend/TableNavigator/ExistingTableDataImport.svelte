@@ -12,6 +12,7 @@
   let validation = {}
   let validateHash = ''
   let schema = null
+  let invalidColumns = []
 
   export let tableId = null
   export let rows = []
@@ -87,8 +88,11 @@
 
     try {
       if (rows.length > 0) {
-        validation = await API.validateExistingTableImport({ rows, tableId });
-        allValid = Object.values(validation).every(column => column)
+        const response = await API.validateExistingTableImport({ rows, tableId });
+
+        validation = response.schemaValidation
+        invalidColumns = response.invalidColumns
+        allValid = response.allValid
       }
     } catch (e) {
       error = e.message
@@ -123,27 +127,35 @@
     {/if}
   </label>
 </div>
-{#if rows.length > 0 && !error}
+{#if fileName && Object.keys(validation).length === 0}
+  <p>No valid fields, try another file</p>
+{:else if rows.length > 0 && !error}
   <div class="schema-fields">
-    {#each Object.values(schema) as column}
+    {#each Object.keys(validation) as name}
       <div class="field">
-        <span>{column.name}</span>
+        <span>{name}</span>
         <Select
-          bind:value={column.type}
-          on:change={e => column.type = e.detail}
+          value={schema[name]?.type}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
           disabled
         />
-        <span class={loading || validation[column.name] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
-          {validation[column.name] ? "Success" : "Failure"}
+        <span class={loading || validation[name] ? 'fieldStatusSuccess' : 'fieldStatusFailure'}>
+          {validation[name] ? "Success" : "Failure"}
         </span>
       </div>
-      <p>The following columns are present in your data, but do not match
     {/each}
   </div>
+  {#if invalidColumns.length > 0}
+    <p>The following columns are present in the data you wish to import, but do not match the schema of this table and will be ignored.</p>
+    <ul>
+      {#each invalidColumns as column}
+        <li>{column}</li>
+      {/each}
+    </ul>
+  {/if}
 {/if}
 
 <style>

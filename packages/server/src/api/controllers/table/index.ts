@@ -1,6 +1,5 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import * as csvParser from "../../../utilities/csvParser"
 import { validate as validateSchema, isSchema, isRows } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { getDatasourceParams } from "../../../db/utils"
@@ -58,7 +57,7 @@ export async function find(ctx: BBContext) {
 export async function save(ctx: BBContext) {
   const appId = ctx.appId
   const table = ctx.request.body
-  const isImport = table.dataImport
+  const isImport = table.rows
 
   const savedTable = await pickApi({ table }).save(ctx)
   if (!table._id) {

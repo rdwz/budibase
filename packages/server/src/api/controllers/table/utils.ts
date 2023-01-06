@@ -1,4 +1,3 @@
-import { transform } from "../../../utilities/csvParser"
 import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import { isEqual } from "lodash"
@@ -133,14 +132,11 @@ export async function handleDataImport(user: any, table: any, rows: any) {
   const schema: unknown = table.schema
 
   if (!rows || !isRows(rows) || !isSchema(schema)) {
-    console.log('failed');
     return table
   }
 
   const db = context.getAppDB()
   const data = parse(rows, schema)
-  console.log(table.schema)
-  console.log(schema);
 
   let finalData: any = importToRows(data, table, user)
 
